@@ -13,9 +13,12 @@ export default function TodoPage() {
 
     const addToDo = () => {
         if (!input.trim()) return;
-
         setTodo((prev) => [...prev, { text: input.trim(), id: Date.now(), completed: false, }])
         setInput("");
+    }
+
+    const toggleToDo = (id: number) => {
+        setTodo((prev) => prev.map((todo) => todo.id === id ? { ...todo, completed: !todo.completed } : todo))
     }
 
     return (
@@ -26,17 +29,17 @@ export default function TodoPage() {
                     {todo.map((item) => (
 
                         <li key={item.id} className="flex  px-4 py-2 bg-white  border-b last:border-none border-gray-200 transition-all duration-300 ease-in-out">
-                            <label><span style={{ text- decoration: todo.completed ? "line-trough" : "none"}}>{item.text}</span>   <input type="checkbox"></input></label>
+                            <label><span key={item.id} style={{ textDecoration: item.completed ? "line-trough" : "none" }}>{item.text}</span><input checked={item.completed} onChange={() => toggleToDo(item.id)} type="checkbox"></input></label>
                         </li>
 
 
                     ))}
-            </ul>
-            <form>
-                <input value={input} onChange={(e) => setInput(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="Place your todo here"></input>
-                <button type="button" onClick={addToDo} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add To</button>
-            </form>
-        </div >
+                </ul>
+                <form>
+                    <input value={input} onChange={(e) => setInput(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="Place your todo here"></input>
+                    <button type="button" onClick={addToDo} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add To</button>
+                </form>
+            </div >
         </>
     )
 }
