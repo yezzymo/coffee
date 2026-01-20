@@ -1,5 +1,6 @@
-import Image from "next/image";
+import { useEffect, useState, useMemo } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,68 +12,104 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function Home() {
-  return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+enum CoffeeType {
+  All = "all",
+  Hot = "hot",
+  Iced = "iced",
 }
+
+export interface CoffeeProps {
+  title: string;
+  description: string;
+  ingredients: string[];
+  image: string;
+  id: number;
+  tags: string[];
+}
+
+const ValidImage = ({ src }: { src: string }) => {
+  const [error, setError] = useState(false);
+  return (
+    <Image
+      onError={() => setError(true)}
+      className="relative aspect-square w-full object-cover"
+      alt={"title"}
+      src={src.startsWith("https") && !error ? src : "https://www.verizon.com/learning/_next/static/images/87c8be7b206ab401b295fd1d21620b79.jpg"}
+      width={500}
+      height={500}
+    />
+  );
+};
+
+const Chip = ({ text }: { text: string }) => (
+  <div className="px-2 py-1 rounded-full bg-slate-100 shadow-sm border text-sm opacity-75 text-slate-800">
+    {text}
+  </div>
+);
+
+export default function Home() {
+  const [icedCoffee, setIcedCoffee] = useState<CoffeeProps[]>([])
+  const [hotCoffee, setHotCoffee] = useState<CoffeeProps[]>([])
+  const [page, setPage] = useState<CoffeeType>(CoffeeType.All);
+  const coffeeList = useMemo(() => {
+    const all = [...hotCoffee, ...icedCoffee];
+    if (page === CoffeeType.Hot) return hotCoffee;
+    if (page === CoffeeType.Iced) return icedCoffee;
+    return all;
+  }, [page, hotCoffee, icedCoffee]);
+
+
+
+  useEffect(() => {
+    fetch("https://cof.cny.sh/iced")
+      .then((res) => res.json())
+      .then((data) => setIcedCoffee(data));
+    fetch("https://cof.cny.sh/hot")
+      .then((res) => res.json())
+      .then((data) => setHotCoffee(data));
+  }, []);
+
+
+
+  return (
+    <>
+      <div className="flex justify-center gap-4 my-8">
+        <button type="button" onClick={() => setPage(CoffeeType.All)} className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">All</button>
+        <button type="button" onClick={() => setPage(CoffeeType.Iced)} className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">Iced</button>
+        <button type="button" onClick={() => setPage(CoffeeType.Hot)} className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow">Hot</button>
+      </div>
+      <div className="grid grid-cols-2 w-[800px] mx-auto gap-4">
+
+        {coffeeList.map((coffee) =>
+          coffee && (
+            <div
+              className="max-w-sm rounded overflow-hidden shadow-lg"
+              key={coffee.id}
+            >
+              <ValidImage src={coffee.image} />
+              <div className="px-6 py-4">
+                <p className="font-bold text-xl mb-2">{coffee.title ? coffee.title : "Unknown"}</p>
+                <p className=" text-sm mb-2" dangerouslySetInnerHTML={{ __html: coffee.description }}
+                ></p>
+
+                <div className="flex gap-4">
+                  {coffee.ingredients.map((ingredients) =>
+                    <Chip text={ingredients}></Chip>
+                  )}
+                </div>
+
+
+
+              </div>
+            </div>
+          )
+
+
+        )}
+      </div >
+    </>
+  )
+
+}
+
+
